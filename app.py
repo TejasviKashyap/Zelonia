@@ -85,11 +85,11 @@ def display_pie_charts(system_name, results):
     fig.update_layout(title=f"File Extensions for {system_name}")
     
     # Render the Plotly chart
-    st.plotly_chart(fig)
+    st.plotly_chart(fig,use_container_width=True)
 
 def create_new_map(num_affected_points, show_attack_server):
     # Create a Folium map centered at Singapore
-    m = folium.Map(location=[1.3521+5, 103.8198+120], zoom_start=11, tiles='Cartodb dark_matter')
+    m = folium.Map(location=[1.3521+5, 103.8198+120], zoom_start=10, tiles='Cartodb dark_matter')
 
     # Add outline of Singapore as GeoJSON overlay
     folium.GeoJson(os.path.join("data", "output.geojson"), name="geojson").add_to(m)
@@ -173,7 +173,7 @@ def create_new_map(num_affected_points, show_attack_server):
 
 def create_device_map(num_affected_points, show_attack_server):
     # Create a Folium map centered at Singapore
-    m = folium.Map(location=[1.3521-20, 103.8198+100], zoom_start=11, tiles='Cartodb dark_matter')
+    m = folium.Map(location=[1.3521+5, 103.8198+120], zoom_start=10, tiles='Cartodb dark_matter')
 
     # Add outline of Singapore as GeoJSON overlay
     folium.GeoJson(os.path.join("data", "output.geojson"), name="geojson").add_to(m)
@@ -207,7 +207,7 @@ def create_device_map(num_affected_points, show_attack_server):
             singapore_coordinates[1] += 120
 
     # Define headquarters points
-    headquarters = [[1.320-20, 103.8901+100],[1.3104-20, 103.7151+100], [1.261204-20, 103.669720+100]]
+    headquarters = [[1.320+5, 103.8901+120],[1.3104+5, 103.7151+120], [1.261204+5, 103.669720+120]]
     
         # Add connections between headquarters points and other points on the map
 
@@ -256,6 +256,7 @@ def create_device_map(num_affected_points, show_attack_server):
     return map_html
 
 
+
 # Function to display system health details
 def display_system_health(system_name, system_status):
     if system_status == "Online":
@@ -282,27 +283,32 @@ def display_system_health(system_name, system_status):
         # Display additional parameters in a table format
         st.write("Additional Parameters:")
         parameter_data = {
-            "Parameter": ["Active Instances", "Monitoring Services", "Response Time", "Resource Utilization",
-                          "Service Availability", "Throughput", "Database Connections", "Network Traffic"],
-            "Value": [active_instances, monitoring_services, f"{response_time:.2f} ms",
-                      f"{resource_utilization:.2f}%", f"{service_availability:.2f}%",
-                      f"{throughput:.2f} Mbps", db_connections, f"{network_traffic:.2f} GB"],
-            "Status": ["✅"] * 8  # Green tick marks indicating system is active
+            "Parameter": ["Active Instances", "Resource Utilization",
+                          "Service Availability"],
+            "Value": [active_instances,
+                      f"{resource_utilization:.2f}%", f"{service_availability:.2f}%"],
+            "Status": ["✅"] * 3  # Green tick marks indicating system is active
         }
-        parameter_table = st.table(pd.DataFrame(parameter_data).set_index('Parameter'))
+        parameter_table = st.dataframe(pd.DataFrame(parameter_data).set_index('Parameter'),use_container_width=True)
         parameter_table.table_style = {"align": "center"}  # Center-align the content
 
     else:
         st.error(f"{system_name} is Offline")
+        system_health = random.randint(0,2)  # Random system health value (96 to 100)
+        st.write(f"System Health: {system_health}%")
+        my_bar = st.progress(0)
+        for percent_complete in range(system_health):
+            time.sleep(0.02)
+            my_bar.progress(percent_complete + 1)
         # Display parameters for offline systems with values indicating offline state
         st.write("Additional Parameters:")
         parameter_data = {
-            "Parameter": ["Active Instances", "Monitoring Services", "Response Time", "Resource Utilization",
-                          "Service Availability", "Throughput", "Database Connections", "Network Traffic"],
-            "Value": [0] * 8,  # Setting all values to 0 for offline systems
-            "Status": ["❌"] * 8  # Red cross marks indicating system is inactive
+            "Parameter": ["Active Instances", "Resource Utilization",
+                          "Service Availability"],
+            "Value": [0] * 3,  # Setting all values to 0 for offline systems
+            "Status": ["❌"] * 3  # Red cross marks indicating system is inactive
         }
-        parameter_table = st.table(pd.DataFrame(parameter_data).set_index('Parameter'))
+        parameter_table = st.dataframe(pd.DataFrame(parameter_data).set_index('Parameter'),use_container_width=True)
         parameter_table.table_style = {"align": "center"}  # Center-align the content
 
 # Main function to create the dashboard
@@ -347,18 +353,51 @@ def main():
             admin_controls[system_name] = st.sidebar.selectbox(f"{system_name} Status", ["Online", "Offline"])
 
         
-
-    # Display the map
-    st.subheader("Map of Affected Targets")
-    st.write("Blinking red dots indicate attacked targets")
-    st.markdown("### Please wait, loading map...")
-
-    # Render the map based on admin input
     map_html = create_new_map(admin_inputs["num_affected_points"], admin_inputs['attack_server_found'])
-    st.components.v1.html(map_html, height=1000)#, width=700, height=500)
+    # Display the map
+    col1,col2 = st.columns(2)
+
+    device_map = create_device_map(admin_inputs["num_affected_points"], admin_inputs['attack_server_found'])
+
+    with col1:
+        st.subheader("Map of Affected Targets")
+        st.write("Blinking red dots indicate attacked targets")
+        # Render the map based on admin input
+        st.components.v1.html(map_html, height=400)#, width=700, height=500)
+    
+    with col2:
+        st.subheader("Connected Devices")
+        st.write("Devices connected to different servers")
+        # Render the map based on admin input
+        st.components.v1.html(device_map, height=400)#, width=700, height=500)
+
+    
+    sys_col1, sys_col2, sys_col3 = st.columns(3)
+    system_tabs = ["Navigation", "Weather", "Email", "HR", "Finance", "Pay"]
+
+    with sys_col1:
+        selected_tab = system_tabs[0]
+        display_system_health(selected_tab, admin_controls[selected_tab])
+        scanned_results = scan_file_storage(selected_tab, admin_controls[selected_tab])
+        display_pie_charts(selected_tab, scanned_results)
+
+    with sys_col2:
+        selected_tab = system_tabs[1]
+        display_system_health(selected_tab, admin_controls[selected_tab])
+        scanned_results = scan_file_storage(selected_tab, admin_controls[selected_tab])
+        display_pie_charts(selected_tab, scanned_results)
+
+    with sys_col3:
+        selected_tab = system_tabs[2]
+        display_system_health(selected_tab, admin_controls[selected_tab])
+        scanned_results = scan_file_storage(selected_tab, admin_controls[selected_tab])
+        display_pie_charts(selected_tab, scanned_results)
+
+
+    
 
     # Component tabs: Navigation, Weather, Email, HR, Finance, Pay
-    system_tabs = ["Navigation", "Weather", "Email", "HR", "Finance", "Pay"]
+
     selected_tab = st.selectbox("Select System", system_tabs)
     display_system_health(selected_tab, admin_controls[selected_tab])
     
