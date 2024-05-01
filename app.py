@@ -83,14 +83,18 @@ def display_pie_charts(system_name, results):
 
     # Create a list of colors for the pie chart
     colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf']
+    results = dict(sorted(results.items(), key=lambda item: item[1], reverse=True))
+
 
     # Create a Pie chart using Plotly
-    fig = go.Figure(data=[go.Pie(labels=list(results.keys()), values=list(results.values()), textinfo='label+percent', marker=dict(colors=colors))])
-    fig.update_layout(title=f"File Extensions for {system_name}")
+    fig = go.Figure(data=[go.Pie(labels=list(results.keys()), values=list(results.values()), textposition="inside", textinfo='label+percent', marker=dict(colors=colors))])
+    #fig.update_layout(title=f"File Extensions for {system_name}")
+    
     
     # Render the Plotly chart
     st.plotly_chart(fig,use_container_width=True)
 
+@st.experimental_fragment
 def create_new_map(num_affected_points, show_attack_server):
     # Create a Folium map centered at Singapore
     m = folium.Map(location=[1.3521+5, 103.8198+120], zoom_start=10, tiles='Cartodb dark_matter')
@@ -136,9 +140,10 @@ def create_new_map(num_affected_points, show_attack_server):
     headquarters = [ [1.257704+5, 103.675321+120],[1.399115+5, 103.814710+120],[1.356555+5, 103.901914+120]]
     
         # Add connections between headquarters points and other points on the map
+    keys = ["Navigation", "Weather", "Corporate"]
 
     for i in range(3):
-        server_status = num_affected_points['server'+str(i+1)]
+        server_status = num_affected_points[keys[i]]
         if server_status == 'Online':
             hq = headquarters[i]
             folium.Marker(location=hq, icon=folium.Icon(icon='fa-building', prefix='fa', color='blue', icon_color='black')).add_to(m)
@@ -182,6 +187,7 @@ def create_new_map(num_affected_points, show_attack_server):
 
     return map_html
 
+@st.experimental_fragment
 def create_device_map(num_affected_points, show_attack_server):
     # Create a Folium map centered at Singapore
     m = folium.Map(location=[1.3521+5, 103.8198+120], zoom_start=10, tiles='Cartodb dark_matter')
@@ -224,19 +230,20 @@ def create_device_map(num_affected_points, show_attack_server):
     comp_url = "data/monitor.png"
     laptop_url = "data/laptop.png"
     urls = [mobile_url, comp_url, laptop_url]
-    i = 1
+    i = 0
+    keys = ["Navigation", "Weather", "Corporate"]
 
 
     for loc in headquarters:
         folium.Marker(location=loc, icon=folium.Icon(icon='fa-building', prefix='fa', color='green', icon_color='black')).add_to(m)
-        points_around_coordinate = generate_points_around_coordinate(loc, random.randint(4,8),random.uniform(0.02,0.08))
+        points_around_coordinate = generate_points_around_coordinate(loc, random.randint(4,8),random.uniform(0.02,0.05))
 
-        server_status = num_affected_points['server'+str(i)]
+        server_status = num_affected_points[keys[i]]
         i += 1
 
         if server_status == 'Online':
             folium.Marker(location=loc, icon=folium.Icon(icon='fa-building', prefix='fa', color='lightgreen', icon_color='black')).add_to(m)
-            folium.Circle(location=loc, radius=random.randint(5000,10000), color='lightgreen', fill=True, fill_color='darkgreen', fill_opacity=0.5).add_to(m)
+            folium.Circle(location=loc, radius=random.randint(5000,8000), color='lightgreen', fill=True, fill_color='darkgreen', fill_opacity=0.5).add_to(m)
             for points in points_around_coordinate:
                 icon = folium.CustomIcon(
                         random.choice(urls),
@@ -249,7 +256,7 @@ def create_device_map(num_affected_points, show_attack_server):
             #folium.Circle(location=loc, radius=random.randint(5000,10000), color='lightgreen', fill=True, fill_color='green', fill_opacity=0.5).add_to(m)
         elif server_status == 'Offline':
             folium.Marker(location=loc, icon=folium.Icon(icon='fa-building', prefix='fa', color='black', icon_color='white')).add_to(m)
-            folium.Circle(location=loc, radius=random.randint(5000,10000), color='black', fill=True, fill_color='red', fill_opacity=0.5).add_to(m)
+            folium.Circle(location=loc, radius=random.randint(5000,8000), color='black', fill=True, fill_color='red', fill_opacity=0.5).add_to(m)
             for points in points_around_coordinate:
                 icon = folium.CustomIcon(
                         random.choice(urls),
@@ -325,6 +332,29 @@ def display_system_health(system_name, system_status):
         }
         parameter_table = st.dataframe(pd.DataFrame(parameter_data).set_index('Parameter'),use_container_width=True)
         parameter_table.table_style = {"align": "center"}  # Center-align the content
+    
+    elif system_status == "Isolated":
+        st.warning(f"{system_name} is Rebooting",icon="⚠️")
+        st.write("System Health: N/A")
+        system_health = 0  # Random system health value (96 to 100)
+        my_bar = st.progress(0)
+
+        for percent_complete in range(system_health):
+            time.sleep(0.02)
+            my_bar.progress(percent_complete + 1)
+
+        st.write("Additional Parameters:")
+        parameter_data = {
+            "Parameter": ["Active Instances", "Resource Utilization",
+                        "Service Availability"],
+            "Value": ['N/A'] * 3,  # Setting all values to 0 for offline systems
+            "Status": ["⌛"] * 3  # Red cross marks indicating system is inactive
+        }
+        parameter_table = st.dataframe(pd.DataFrame(parameter_data).set_index('Parameter'),use_container_width=True)
+        parameter_table.table_style = {"align": "center"}  # Center-align the content
+
+
+
 
     else:
         st.error(f"{system_name} is Offline")
@@ -373,25 +403,21 @@ def main():
     # Admin controls for the map
     if admin_access:
         st.sidebar.subheader("Admin Controls")
-        st.sidebar.write("Map Controls:")
-        for server in admin_inputs['num_affected_points']:
-            admin_inputs['num_affected_points'][server] = st.sidebar.selectbox(f"{server} Status", ["Online", "Isolated", "Offline"])
-
-        #admin_inputs["num_affected_points"] = st.sidebar.slider("Number of Affected Points", min_value=0, max_value=20, value=admin_inputs["num_affected_points"])
-
-        admin_inputs['attack_server_found'] = st.sidebar.checkbox("Show attack server: ")
-
         # Admin controls for system status
         st.sidebar.write("System Status Controls:")
         for system_name in admin_controls:
-            admin_controls[system_name] = st.sidebar.selectbox(f"{system_name} Status", ["Online", "Offline"])
+            admin_controls[system_name] = st.sidebar.selectbox(f"{system_name} Status", ["Online", "Isolated", "Offline"])
 
         
-    map_html = create_new_map(admin_inputs["num_affected_points"], admin_inputs['attack_server_found'])
+        admin_inputs['attack_server_found'] = st.sidebar.checkbox("Show attack server: ")
+
+        
+        
+    map_html = create_new_map(admin_controls, admin_inputs['attack_server_found'])
     # Display the map
     col1,col2 = st.columns(2)
 
-    device_map = create_device_map(admin_inputs["num_affected_points"], admin_inputs['attack_server_found'])
+    device_map = create_device_map(admin_controls, admin_inputs['attack_server_found'])
 
     with col1:
         st.subheader("Map of Affected Targets")
@@ -446,18 +472,6 @@ def main():
             # Display pie charts for file extensions
         display_pie_charts(selected_tab, scanned_results)
         st.success("Scan complete!")
-
-    
-    
-
-    # Display system health details for the selected tab
-    if admin_access:
-        system_name = selected_tab
-        system_status = admin_controls[system_name]
-
-    # Component: Navigation Data Integrity team member's device used by the hacker
-    st.subheader("Navigation Data Integrity Team Member's Device")
-    st.write("Device Status: Compromised")
 
 # Run the dashboard
 if __name__ == "__main__":
