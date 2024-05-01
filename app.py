@@ -8,6 +8,8 @@ import time
 import pandas as pd
 import matplotlib.pyplot as plt
 import plotly.graph_objects as go
+from geopy.distance import geodesic
+import math
 
 
 st.set_page_config(
@@ -23,10 +25,7 @@ def get_admin_controls():
     return {
         "Navigation": "Online",
         "Weather": "Online",
-        "Email": "Online",
-        "HR": "Online",
-        "Finance": "Online",
-        "Pay": "Online"
+        "Corporate": "Online"
     }
 
 # Function to get admin inputs
@@ -43,6 +42,7 @@ def get_admin_inputs():
     }
 
 # Function to simulate scanning process
+@st.experimental_fragment
 def scan_file_storage(system_name, status):
     # Simulate scanning process
     scanned_results = {}
@@ -51,10 +51,7 @@ def scan_file_storage(system_name, status):
     file_extensions = {
         "Navigation": {"shp": 56, "gpx": 21, "shx": 19, "geojson": 3, "csv": 1},
         "Weather": {"json": 40, "csv": 30, "txt": 20, "xml": 5, "grib": 3, "dat": 2},
-        "Email": {"eml": 50, "msg": 30, "pst": 10, "mbox": 5, "pdf": 3, "docx": 2},
-        "HR": {"pdf": 45, "docx": 30, "xlsx": 10, "csv": 7, "txt": 5, "jpg": 3},
-        "Finance": {"xlsx": 50, "pdf": 20, "csv": 15, "docx": 10, "xml": 3, "json": 2},
-        "Pay": {"pdf": 50, "xlsx": 25, "csv": 10, "docx": 8, "xml": 5, "json": 2}
+        "Corporate": {"eml": 50, "pdf": 30, "xlsx": 10, "docx": 5, "csv": 3, "json": 2}
     }
 
     if status == "Online":
@@ -72,6 +69,14 @@ def scan_file_storage(system_name, status):
             scanned_results[extension] = percentage * total_percentage // 100
 
     return scanned_results
+
+def generate_points_around_coordinate(coordinate, num_points, max_offset_degrees):
+    points = []
+    for _ in range(num_points):
+        lat = coordinate[0] + random.uniform(-max_offset_degrees, max_offset_degrees)
+        lon = coordinate[1] + random.uniform(-max_offset_degrees, max_offset_degrees)
+        points.append((lat, lon))
+    return points
 
 # Function to display pie charts for file extensions
 def display_pie_charts(system_name, results):
@@ -98,23 +103,29 @@ def create_new_map(num_affected_points, show_attack_server):
     servers=[ [[1.3521, 103.8198],
         [1.3578, 103.9870],
         [1.3196, 103.8253],
-        [1.2901, 103.8029],[1.2865, 103.8539], [1.3242, 103.8744],
-        [1.3575, 103.7640],
-        [1.3667, 103.7744],
-        [1.3967, 103.70]],[[1.2912, 103.8375],
+        [1.2901, 103.8029]
+        #[1.2865, 103.8539], [1.3242, 103.8744],
+        #[1.3575, 103.7640],
+        #[1.3667, 103.7744],
+        #[1.3967, 103.70]
+        ],[
+        [1.2912, 103.8375],
         [1.3480, 103.6830],
-        [1.3139, 103.7657],[1.2984, 103.7736],
-        [1.3340, 103.7359],
-        [1.3199, 103.7655],
-        [1.3151, 103.7480],
-        [1.3329, 103.7065],
-        [1.2996, 103.8334],
-        [1.2831, 103.8165]
-        ],[[1.388307, 103.890594],
+        [1.3139, 103.7657],
+        [1.2984, 103.7736],
+        [1.3340, 103.7359]
+        #[1.3199, 103.7655],
+        #[1.3151, 103.7480],
+        #[1.3329, 103.7065],
+        #[1.2996, 103.8334],
+        #[1.2831, 103.8165]
+        ],
+        [
+        [1.388307, 103.890594],
         [1.426724, 103.813737],
         [1.280952, 103.813019],
-        [1.268026, 103.628778]
-]
+        [1.268026, 103.628778]      
+        ]
     ]
 
     for i in servers:
@@ -123,7 +134,7 @@ def create_new_map(num_affected_points, show_attack_server):
             singapore_coordinates[1] += 120
 
     # Define headquarters points
-    headquarters = [[1.320+5, 103.8901+120],[1.3104+5, 103.7151+120], [1.261204+5, 103.669720+120]]
+    headquarters = [ [1.257704+5, 103.675321+120],[1.399115+5, 103.814710+120],[1.356555+5, 103.901914+120]]
     
         # Add connections between headquarters points and other points on the map
 
@@ -143,25 +154,26 @@ def create_new_map(num_affected_points, show_attack_server):
                 #folium.PolyLine(locations=[hq, point], color='green').add_to(m)
         else:
             hq = headquarters[i]
-            folium.CircleMarker(location=hq, radius=10, color='black', fill=True, fill_color='red', fill_opacity=0.5).add_to(m)
+            folium.CircleMarker(location=hq, radius=10, color='black', fill=True, fill_color='red', fill_opacity=0.8).add_to(m)
             for point in servers[i]:
-                folium.CircleMarker(location=point, radius=4, color='black', fill=True, fill_color='red', fill_opacity=0.5).add_to(m)
-                folium.PolyLine(locations=[point, hq], color='red', weight=2).add_to(m)
+                folium.CircleMarker(location=point, radius=4, color='black', fill=True, fill_color='red', fill_opacity=0.8).add_to(m)
+                folium.PolyLine(locations=[point, hq], color='red', weight=1).add_to(m)
 
     if show_attack_server:
         folium.CircleMarker(location=[7.354704-60, 80.990871-100], radius=10, color='red', fill=True, fill_color='red').add_to(m)
         for i in range(2):
             folium.PolyLine(locations=[[7.354704-60, 80.990871-100], headquarters[i]], color='red', weight=2).add_to(m)
 
+
     # Add JavaScript for blinking effect
     script = """
     <script>
     setInterval(function() {
-        var dots = document.querySelectorAll('.leaflet-interactive[fill-opacity="0.5"]');
+        var dots = document.querySelectorAll('.leaflet-interactive[fill-opacity="0.8"]');
         for (var i = 0; i < dots.length; i++) {
             dots[i].style.display = (dots[i].style.display === 'none' ? '' : 'none');
         }
-    }, 500);
+    }, 1000);
     </script>
     """
     m.get_root().html.add_child(folium.Element(script))
@@ -207,35 +219,58 @@ def create_device_map(num_affected_points, show_attack_server):
             singapore_coordinates[1] += 120
 
     # Define headquarters points
-    headquarters = [[1.320+5, 103.8901+120],[1.3104+5, 103.7151+120], [1.261204+5, 103.669720+120]]
-    
-        # Add connections between headquarters points and other points on the map
+    headquarters = [ [1.257704+5, 103.675321+120],[1.399115+5, 103.814710+120],[1.356555+5, 103.901914+120]]
 
-    for i in range(3):
-        server_status = num_affected_points['server'+str(i+1)]
+    mobile_url = "data/mobile-phone.png"
+    comp_url = "data/monitor.png"
+    laptop_url = "data/laptop.png"
+    urls = [mobile_url, comp_url, laptop_url]
+    i = 1
+
+
+    for loc in headquarters:
+        folium.Marker(location=loc, icon=folium.Icon(icon='fa-building', prefix='fa', color='green', icon_color='black')).add_to(m)
+        points_around_coordinate = generate_points_around_coordinate(loc, random.randint(4,8),random.uniform(0.02,0.08))
+
+        server_status = num_affected_points['server'+str(i)]
+        i += 1
+
         if server_status == 'Online':
-            hq = headquarters[i]
-            folium.Marker(location=hq, icon=folium.Icon(icon='fa-building', prefix='fa', color='blue', icon_color='black')).add_to(m)
-            for point in servers[i]:
-                folium.Marker(location=point, icon=folium.Icon(icon='fa-server', prefix='fa',color='lightgreen', icon_color='black')).add_to(m)
-                folium.PolyLine(locations=[hq, point], color='lightgreen').add_to(m)
+            folium.Marker(location=loc, icon=folium.Icon(icon='fa-building', prefix='fa', color='lightgreen', icon_color='black')).add_to(m)
+            folium.Circle(location=loc, radius=random.randint(5000,10000), color='lightgreen', fill=True, fill_color='darkgreen', fill_opacity=0.5).add_to(m)
+            for points in points_around_coordinate:
+                icon = folium.CustomIcon(
+                        random.choice(urls),
+                        icon_size=(20, 20)
+                    )
+
+                folium.Marker(location=points, icon=icon).add_to(m)#folium.Icon(icon='fa-building', prefix='fa', color='red', icon_color='black')).add_to(m)
         elif server_status == 'Isolated':
-            hq = headquarters[i]
-            folium.Marker(location=hq, icon=folium.Icon(icon='fa-building', prefix='fa',color='lightgray')).add_to(m)
-            for point in servers[i]:
-                folium.Marker(location=point, icon=folium.Icon(icon='fa-server', prefix='fa',color='lightgray')).add_to(m)
-                #folium.PolyLine(locations=[hq, point], color='green').add_to(m)
-        else:
-            hq = headquarters[i]
-            folium.CircleMarker(location=hq, radius=10, color='black', fill=True, fill_color='red', fill_opacity=0.5).add_to(m)
-            for point in servers[i]:
-                folium.CircleMarker(location=point, radius=4, color='black', fill=True, fill_color='red', fill_opacity=0.5).add_to(m)
-                folium.PolyLine(locations=[point, hq], color='red', weight=2).add_to(m)
+            folium.Marker(location=loc, icon=folium.Icon(icon='fa-building', prefix='fa', color='lightgray', icon_color='black')).add_to(m)
+            #folium.Circle(location=loc, radius=random.randint(5000,10000), color='lightgreen', fill=True, fill_color='green', fill_opacity=0.5).add_to(m)
+        elif server_status == 'Offline':
+            folium.Marker(location=loc, icon=folium.Icon(icon='fa-building', prefix='fa', color='black', icon_color='white')).add_to(m)
+            folium.Circle(location=loc, radius=random.randint(5000,10000), color='black', fill=True, fill_color='red', fill_opacity=0.5).add_to(m)
+            for points in points_around_coordinate:
+                icon = folium.CustomIcon(
+                        random.choice(urls),
+                        icon_size=(20, 20)
+                    )
+
+                folium.Marker(location=points, icon=icon).add_to(m)#folium.Icon(icon='fa-building', prefix='fa', color='red', icon_color='black')).add_to(m)
+
 
     if show_attack_server:
         folium.CircleMarker(location=[7.354704-60, 80.990871-100], radius=10, color='red', fill=True, fill_color='red').add_to(m)
-        for i in range(2):
-            folium.PolyLine(locations=[[7.354704-60, 80.990871-100], headquarters[i]], color='red', weight=2).add_to(m)
+        folium.PolyLine(locations=[[7.354704-60, 80.990871-100], [1.406666+5, 103.769391+120]], color='red', weight=2).add_to(m)
+        icon = folium.CustomIcon(
+                    "data/virus.png",
+                    icon_size=(35, 35)
+                )
+        folium.Marker(location=[1.406666+5, 103.769391+120], icon=icon).add_to(m)
+        for point in headquarters[:2]:
+            folium.PolyLine(locations=[point, [1.406666+5, 103.769391+120]], color='red', weight=2,dash_array='10').add_to(m)
+
 
     # Add JavaScript for blinking effect
     script = """
@@ -245,7 +280,7 @@ def create_device_map(num_affected_points, show_attack_server):
         for (var i = 0; i < dots.length; i++) {
             dots[i].style.display = (dots[i].style.display === 'none' ? '' : 'none');
         }
-    }, 500);
+    }, 1000);
     </script>
     """
     m.get_root().html.add_child(folium.Element(script))
@@ -373,7 +408,7 @@ def main():
 
     
     sys_col1, sys_col2, sys_col3 = st.columns(3)
-    system_tabs = ["Navigation", "Weather", "Email", "HR", "Finance", "Pay"]
+    system_tabs = ["Navigation", "Weather", "Corporate"]
 
     with sys_col1:
         selected_tab = system_tabs[0]
