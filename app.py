@@ -10,15 +10,19 @@ import matplotlib.pyplot as plt
 import plotly.graph_objects as go
 import math
 
+BACKGROUND_COLOR = 'black'
+COLOR = 'white'
+
 
 st.set_page_config(
-   page_title="Zelonia Systems Dashboard",
-   page_icon="🧊",
+   page_title="Zelonia Technical Systems Dashboard",
+   page_icon="data/Zelonia Flag.jpg",
    layout="wide"
 )
 
+
+
 # Function to get admin controls
-#@st.cache(allow_output_mutation=True)
 @st.cache_resource()
 def get_admin_controls():
     return {
@@ -28,7 +32,6 @@ def get_admin_controls():
     }
 
 # Function to get admin inputs
-#@st.cache(allow_output_mutation=True)
 @st.cache_resource()
 def get_admin_inputs():
     return {
@@ -56,6 +59,13 @@ def scan_file_storage(system_name, status):
     if status == "Online":
         # For online systems, return the predefined file extension percentages
         scanned_results = file_extensions.get(system_name, {})
+        print(scanned_results)
+
+    elif status == "Isolated":
+        # For online systems, return the predefined file extension percentages
+        scanned_results = {"Undefined":100}
+        print(scanned_results)
+
     else:
         # For offline systems, simulate SPIKE percentage between 90 and 97
         spike_percentage = random.randint(80, 90)
@@ -88,7 +98,6 @@ def display_pie_charts(system_name, results):
 
     # Create a Pie chart using Plotly
     fig = go.Figure(data=[go.Pie(labels=list(results.keys()), values=list(results.values()), textposition="inside", textinfo='label+percent', marker=dict(colors=colors))])
-    #fig.update_layout(title=f"File Extensions for {system_name}")
     
     
     # Render the Plotly chart
@@ -96,7 +105,7 @@ def display_pie_charts(system_name, results):
 
 @st.experimental_fragment
 def create_new_map(num_affected_points, show_attack_server):
-    # Create a Folium map centered at Singapore
+    # Create a Folium map centered at Zelonia
     m = folium.Map(location=[1.3521+5, 103.8198+120], zoom_start=10, tiles='Cartodb dark_matter')
 
     # Add outline of Singapore as GeoJSON overlay
@@ -107,21 +116,13 @@ def create_new_map(num_affected_points, show_attack_server):
         [1.3578, 103.9870],
         [1.3196, 103.8253],
         [1.2901, 103.8029]
-        #[1.2865, 103.8539], [1.3242, 103.8744],
-        #[1.3575, 103.7640],
-        #[1.3667, 103.7744],
-        #[1.3967, 103.70]
-        ],[
+        ],
+        [
         [1.2912, 103.8375],
         [1.3480, 103.6830],
         [1.3139, 103.7657],
         [1.2984, 103.7736],
         [1.3340, 103.7359]
-        #[1.3199, 103.7655],
-        #[1.3151, 103.7480],
-        #[1.3329, 103.7065],
-        #[1.2996, 103.8334],
-        #[1.2831, 103.8165]
         ],
         [
         [1.388307, 103.890594],
@@ -139,7 +140,6 @@ def create_new_map(num_affected_points, show_attack_server):
     # Define headquarters points
     headquarters = [ [1.257704+5, 103.675321+120],[1.399115+5, 103.814710+120],[1.356555+5, 103.901914+120]]
     
-        # Add connections between headquarters points and other points on the map
     keys = ["Navigation", "Weather", "Corporate"]
 
     for i in range(3):
@@ -155,9 +155,9 @@ def create_new_map(num_affected_points, show_attack_server):
             folium.Marker(location=hq, icon=folium.Icon(icon='fa-building', prefix='fa',color='lightgray')).add_to(m)
             for point in servers[i]:
                 folium.Marker(location=point, icon=folium.Icon(icon='fa-server', prefix='fa',color='lightgray')).add_to(m)
-                #folium.PolyLine(locations=[hq, point], color='green').add_to(m)
         else:
             hq = headquarters[i]
+            folium.Marker(location=hq, icon=folium.Icon(icon='fa-building', prefix='fa',color='lightred', icon_color='black')).add_to(m)
             folium.CircleMarker(location=hq, radius=10, color='black', fill=True, fill_color='red', fill_opacity=0.8).add_to(m)
             for point in servers[i]:
                 folium.CircleMarker(location=point, radius=4, color='black', fill=True, fill_color='red', fill_opacity=0.8).add_to(m)
@@ -189,7 +189,7 @@ def create_new_map(num_affected_points, show_attack_server):
 
 @st.experimental_fragment
 def create_device_map(num_affected_points, show_attack_server):
-    # Create a Folium map centered at Singapore
+    # Create a Folium map centered at Zelonia
     m = folium.Map(location=[1.3521+5, 103.8198+120], zoom_start=10, tiles='Cartodb dark_matter')
 
     # Add outline of Singapore as GeoJSON overlay
@@ -253,7 +253,7 @@ def create_device_map(num_affected_points, show_attack_server):
                 folium.Marker(location=points, icon=icon).add_to(m)#folium.Icon(icon='fa-building', prefix='fa', color='red', icon_color='black')).add_to(m)
         elif server_status == 'Isolated':
             folium.Marker(location=loc, icon=folium.Icon(icon='fa-building', prefix='fa', color='lightgray', icon_color='black')).add_to(m)
-            #folium.Circle(location=loc, radius=random.randint(5000,10000), color='lightgreen', fill=True, fill_color='green', fill_opacity=0.5).add_to(m)
+
         elif server_status == 'Offline':
             folium.Marker(location=loc, icon=folium.Icon(icon='fa-building', prefix='fa', color='black', icon_color='white')).add_to(m)
             folium.Circle(location=loc, radius=random.randint(5000,8000), color='black', fill=True, fill_color='red', fill_opacity=0.5).add_to(m)
@@ -313,13 +313,8 @@ def display_system_health(system_name, system_status):
 
         # Generate random values for additional parameters for online systems
         active_instances = random.randint(20, 30)  # Random number of active instances (20 to 30)
-        monitoring_services = random.randint(5, 10)  # Random number of monitoring services (5 to 10)
-        response_time = random.uniform(50, 100)  # Random response time (50 to 100 ms)
         resource_utilization = random.uniform(60, 80)  # Random resource utilization (60% to 80%)
         service_availability = random.uniform(99.5, 99.9)  # Random service availability (99.5% to 99.9%)
-        throughput = random.uniform(50, 100)  # Random throughput (50 to 100 Mbps)
-        db_connections = random.randint(100, 150)  # Random number of database connections (100 to 150)
-        network_traffic = random.uniform(100, 200)  # Random network traffic (100 to 200 GB)
 
         # Display additional parameters in a table format
         st.write("Additional Parameters:")
@@ -347,8 +342,8 @@ def display_system_health(system_name, system_status):
         parameter_data = {
             "Parameter": ["Active Instances", "Resource Utilization",
                         "Service Availability"],
-            "Value": ['N/A'] * 3,  # Setting all values to 0 for offline systems
-            "Status": ["⌛"] * 3  # Red cross marks indicating system is inactive
+            "Value": ['N/A'] * 3,  # Setting all values to N/A
+            "Status": ["⌛"] * 3 
         }
         parameter_table = st.dataframe(pd.DataFrame(parameter_data).set_index('Parameter'),use_container_width=True)
         parameter_table.table_style = {"align": "center"}  # Center-align the content
@@ -377,7 +372,7 @@ def display_system_health(system_name, system_status):
 
 # Main function to create the dashboard
 def main():
-    st.markdown("<h1 style='text-align: center;'>Zelonia Cyberattack Simulation Dashboard</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 style='text-align: center;'>Zelonia Technical Systems Dashboard</h1>", unsafe_allow_html=True)
 
     # Get admin controls from shared global variable
     admin_controls = get_admin_controls()
@@ -419,59 +414,49 @@ def main():
 
     device_map = create_device_map(admin_controls, admin_inputs['attack_server_found'])
 
+
     with col1:
-        st.subheader("Map of Affected Targets")
-        st.write("Blinking red dots indicate attacked targets")
-        # Render the map based on admin input
-        st.components.v1.html(map_html, height=400)#, width=700, height=500)
+        with st.container( border=True):
+            st.markdown("<h2 style='text-align: center;'>Technical Systems Servers</h2>", unsafe_allow_html=True)
+            #st.subheader("Technical Systems Servers", divider="blue")
+            #st.write("Blinking red dots indicate attacked targets")
+            # Render the map based on admin input
+            st.components.v1.html(map_html, height=400)
+
     
     with col2:
-        st.subheader("Connected Devices")
-        st.write("Devices connected to different servers")
-        # Render the map based on admin input
-        st.components.v1.html(device_map, height=400)#, width=700, height=500)
+        with st.container( border=True):
+            st.markdown("<h2 style='text-align: center;'>Connected Devices</h2>", unsafe_allow_html=True)
+            #st.subheader("Connected Devices", divider="orange")
+            #st.write("Devices connected to different servers")
+            # Render the map based on admin input
+            st.components.v1.html(device_map, height=400)
 
     
     sys_col1, sys_col2, sys_col3 = st.columns(3)
     system_tabs = ["Navigation", "Weather", "Corporate"]
 
     with sys_col1:
-        selected_tab = system_tabs[0]
-        display_system_health(selected_tab, admin_controls[selected_tab])
-        scanned_results = scan_file_storage(selected_tab, admin_controls[selected_tab])
-        display_pie_charts(selected_tab, scanned_results)
+        with st.container( border=True):
+            selected_tab = system_tabs[0]
+            display_system_health(selected_tab, admin_controls[selected_tab])
+            scanned_results = scan_file_storage(selected_tab, admin_controls[selected_tab])
+            display_pie_charts(selected_tab, scanned_results)
 
     with sys_col2:
-        selected_tab = system_tabs[1]
-        display_system_health(selected_tab, admin_controls[selected_tab])
-        scanned_results = scan_file_storage(selected_tab, admin_controls[selected_tab])
-        display_pie_charts(selected_tab, scanned_results)
+        with st.container( border=True):
+            selected_tab = system_tabs[1]
+            display_system_health(selected_tab, admin_controls[selected_tab])
+            scanned_results = scan_file_storage(selected_tab, admin_controls[selected_tab])
+            display_pie_charts(selected_tab, scanned_results)
 
     with sys_col3:
-        selected_tab = system_tabs[2]
-        display_system_health(selected_tab, admin_controls[selected_tab])
-        scanned_results = scan_file_storage(selected_tab, admin_controls[selected_tab])
-        display_pie_charts(selected_tab, scanned_results)
+        with st.container( border=True):
+            selected_tab = system_tabs[2]
+            display_system_health(selected_tab, admin_controls[selected_tab])
+            scanned_results = scan_file_storage(selected_tab, admin_controls[selected_tab])
+            display_pie_charts(selected_tab, scanned_results)
 
-
-    
-
-    # Component tabs: Navigation, Weather, Email, HR, Finance, Pay
-
-    selected_tab = st.selectbox("Select System", system_tabs)
-    display_system_health(selected_tab, admin_controls[selected_tab])
-    
-    if st.button("Scan the System"):
-        my_bar_scan = st.progress(0, text='Scanning in progress...')
-        for percent_complete in range(100):
-            time.sleep(0.01)
-            my_bar_scan.progress(percent_complete + 1, text='Scanning in progress...')
-        time.sleep(1)
-        my_bar_scan.empty()
-        scanned_results = scan_file_storage(selected_tab, admin_controls[selected_tab])
-            # Display pie charts for file extensions
-        display_pie_charts(selected_tab, scanned_results)
-        st.success("Scan complete!")
 
 # Run the dashboard
 if __name__ == "__main__":
