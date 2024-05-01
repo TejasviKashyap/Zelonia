@@ -8,7 +8,6 @@ import time
 import pandas as pd
 import matplotlib.pyplot as plt
 import plotly.graph_objects as go
-from geopy.distance import geodesic
 import math
 
 
