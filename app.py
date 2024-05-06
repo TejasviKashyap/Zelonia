@@ -16,7 +16,7 @@ COLOR = 'white'
 
 st.set_page_config(
    page_title="Zelonia Technical Systems Dashboard",
-   page_icon="data/Zelonia Flag.jpg",
+   page_icon="data/Images/Zelonia Flag.jpg",
    layout="wide"
 )
 
@@ -109,8 +109,8 @@ def create_new_map(num_affected_points, show_attack_server):
     m = folium.Map(location=[1.3521+5, 103.8198+120], zoom_start=10, tiles='Cartodb dark_matter')
 
     # Add outline of Singapore as GeoJSON overlay
-    folium.GeoJson(os.path.join("data", "output.geojson"), name="geojson").add_to(m)
-    folium.GeoJson(os.path.join("data", "newoutput.geojson"), name="geojson2").add_to(m)
+    folium.GeoJson(os.path.join("data/Geojsons", "Zelonia.geojson"), name="geojson").add_to(m)
+    folium.GeoJson(os.path.join("data/Geojsons", "Putonia.geojson"), name="geojson2").add_to(m)
 
     servers=[ [[1.3521, 103.8198],
         [1.3578, 103.9870],
@@ -193,8 +193,8 @@ def create_device_map(num_affected_points, show_attack_server):
     m = folium.Map(location=[1.3521+5, 103.8198+120], zoom_start=10, tiles='Cartodb dark_matter')
 
     # Add outline of Singapore as GeoJSON overlay
-    folium.GeoJson(os.path.join("data", "output.geojson"), name="geojson").add_to(m)
-    folium.GeoJson(os.path.join("data", "newoutput.geojson"), name="geojson2").add_to(m)
+    folium.GeoJson(os.path.join("data/Geojsons", "Zelonia.geojson"), name="geojson").add_to(m)
+    folium.GeoJson(os.path.join("data/Geojsons", "Putonia.geojson"), name="geojson2").add_to(m)
 
     servers=[ [[1.3521, 103.8198],
         [1.3578, 103.9870],
@@ -226,9 +226,9 @@ def create_device_map(num_affected_points, show_attack_server):
     # Define headquarters points
     headquarters = [ [1.257704+5, 103.675321+120],[1.399115+5, 103.814710+120],[1.356555+5, 103.901914+120]]
 
-    mobile_url = "data/mobile-phone.png"
-    comp_url = "data/monitor.png"
-    laptop_url = "data/laptop.png"
+    mobile_url = "data/Images/mobile-phone.png"
+    comp_url = "data/Images/monitor.png"
+    laptop_url = "data/Images/laptop.png"
     urls = [mobile_url, comp_url, laptop_url]
     i = 0
     keys = ["Navigation", "Weather", "Corporate"]
@@ -270,7 +270,7 @@ def create_device_map(num_affected_points, show_attack_server):
         folium.CircleMarker(location=[7.354704-60, 80.990871-100], radius=10, color='red', fill=True, fill_color='red').add_to(m)
         folium.PolyLine(locations=[[7.354704-60, 80.990871-100], [1.406666+5, 103.769391+120]], color='red', weight=2).add_to(m)
         icon = folium.CustomIcon(
-                    "data/virus.png",
+                    "data/Images/virus.png",
                     icon_size=(35, 35)
                 )
         folium.Marker(location=[1.406666+5, 103.769391+120], icon=icon).add_to(m)

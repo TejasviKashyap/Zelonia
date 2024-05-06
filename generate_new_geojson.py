@@ -35,8 +35,8 @@ def offset_geojson(input_file, output_file, offset_lon, offset_lat):
         json.dump(data, f)
 
 # Example usage:
-input_file = 'singapore-boundary.geojson'
-output_file = 'output.geojson'
+input_file = 'data/Geojsons/singapore-boundary.geojson'  #Source
+output_file = 'data/Geojsons/output.geojson' #Destination
 offset_lon = 120
 offset_lat = -5
 offset_geojson(input_file, output_file, offset_lon, offset_lat)
