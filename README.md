@@ -8,12 +8,12 @@ This repo holds the code and required files to run the Technical Dashboard artif
 ### Step 1: Clone the project
 Clone the project using the command:
 ```bash
-git clone 
+git clone https://github.com/UOttawa-Cyber-Range-Scenarios/telfer-zelonia-scenario.git
 ```
 Go to the project directory
 
 ```bash
-  cd Zelonia
+  cd telfer-zelonia-scenario
 ```
 
 ### Step 2: Install dependencies
