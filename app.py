@@ -9,6 +9,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import plotly.graph_objects as go
 import math
+import streamlit.components.v1 as components
 
 BACKGROUND_COLOR = 'black'
 COLOR = 'white'
@@ -421,7 +422,7 @@ def main():
             #st.subheader("Technical Systems Servers", divider="blue")
             #st.write("Blinking red dots indicate attacked targets")
             # Render the map based on admin input
-            st.components.v1.html(map_html, height=400)
+            components.html(map_html, height=400)
 
     
     with col2:
@@ -430,7 +431,7 @@ def main():
             #st.subheader("Connected Devices", divider="orange")
             #st.write("Devices connected to different servers")
             # Render the map based on admin input
-            st.components.v1.html(device_map, height=400)
+            components.html(device_map, height=400)
 
     
     sys_col1, sys_col2, sys_col3 = st.columns(3)
