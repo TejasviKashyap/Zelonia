@@ -25,7 +25,6 @@ pip install -r requirements.txt
 ### Step 3: Run the project
 Run the project on ```localhost``` and ```localnetwork``` using the command:
 ```
-cd Zelonia
 streamlit run app.py
 ``` 
 Streamlit will provide the localhost URL and the network URL once the app starts running
